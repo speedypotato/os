@@ -27,7 +27,7 @@ struct AlgoRet
     The stats each algorithm stores for each job is the time of its first slice, and completion time.
     Jobs that don't get serviced can be left alone; the array is initialized before hand.
     
-    gantt[i] is the id+'A' of the job that run for slice i, or if cpu was idle '.'.
+    gantt[q] is the id+'A' of the job that run for slice q, or if cpu was idle '.'.
     
     See the implementation of fcfs in main.cpp for an example.
 */
