@@ -2,10 +2,10 @@
 
 The following four functions need be completed:
 
-Nick:   round robin
-kevin:  shortest job
-Eric:   highest priority (non-preemptive)
-Bryan:  highest priority w/aging (non-preemptive)
+Nick:   round robin  
+kevin:  shortest job  
+Eric:   highest priority (non-preemptive)  
+Bryan:  highest priority w/aging (non-preemptive)  
 
 Rob:    write up
 
@@ -35,9 +35,9 @@ AlgoRet round_robin       (const Job* job, int njobs, PerJobStats* stats, char* 
 
 AlgoRet sjf               (const Job* job, int njobs, PerJobStats* stats, char* gantt);
 AlgoRet hpf_non_preemptive(const Job* job, int njobs, PerJobStats* stats, char* gantt);
-AlgoRet hpf_aging_non_preemptive(const Job* job, int njobs, PerJobStats* stats, char* gantt);//extra credit
+AlgoRet hpf_aging_non_preemptive(const Job* job, int njobs, PerJobStats* stats, char* gantt);
 /*
-  I think the last three are all very similar, and could all be done in a similar way to the preemptive template function.
-  But with many hands a person can do a single one.
+  I think the last three are all very similar, and could all be done in a similar way to
+  the preemptive template function. But with many hands a person can do a single one.
 */
 ```
