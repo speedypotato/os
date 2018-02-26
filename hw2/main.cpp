@@ -205,7 +205,7 @@ int main(int argc, char** argv)
             fill(stats, stats+NJOBS, PerJobStats{});//zero to simplify logic of potentially unserviced jobs
             AlgoRet r = sim.algo(job, NJOBS, stats, timechart);
 
-            //testFreqs(job, NJOBS, stats, timechart, r.lastCompletionTime);
+            testFreqs(job, NJOBS, stats, timechart, r.lastCompletionTime);
 
             printf("\nTest no: %d\n", testno);
             const Sums sums = printJobLines(job, stats);
@@ -293,7 +293,7 @@ AlgoRet round_robin(const Job* job, int njobs, PerJobStats* stats, char* gantt) 
 	Job jP;
 	char id;
 	
-	while (q < QUANTA) { //Begin simulation
+	while (j <= njobs) { //Begin simulation
 		if (!rrQ_prep.empty() && rrQ_prep.front().arrival <= q) {//check if a new job has arrived
 			rrQ.push(rrQ_prep.front()); //push new job to RR Queue
 			idQ.push(idQ_prep.front());
