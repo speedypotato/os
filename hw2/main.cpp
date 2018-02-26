@@ -64,7 +64,7 @@ const Sim simulations[] =
     {"First Come First Serve", &fcfs},
     {"Shortest Job First (non-preemptive)", nullptr},//&sjf},
     {"Shortest Remaining Time (preemptive)", &SRT},
-    {"Round Robin", nullptr},//&round_robin},
+    {"Round Robin", &round_robin},//&round_robin},
     {"Highest Priority (non-preemptive)", nullptr},//&hpf_non_preemptive},
     {"Highest Priority (preemptive)", &HPF_PREEMPT},//&hpf_preemptive}
     {"HPF-Aging (non-preemptive)", nullptr},//&hpf_preemptive}
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
             fill(stats, stats+NJOBS, PerJobStats{});//zero to simplify logic of potentially unserviced jobs
             AlgoRet r = sim.algo(job, NJOBS, stats, timechart);
 
-            testFreqs(job, NJOBS, stats, timechart, r.lastCompletionTime);
+            //testFreqs(job, NJOBS, stats, timechart, r.lastCompletionTime);
 
             printf("\nTest no: %d\n", testno);
             const Sums sums = printJobLines(job, stats);
@@ -265,6 +265,69 @@ AlgoRet fcfs(const Job* job, int njobs, PerJobStats* stats, char* t)
     }
 
     return {j, q};//jobs completed, elapsed quanta
+}
+
+/**
+ * Round Robin Algorithm
+ * Written by Nicholas Gadjali 2018/2/25
+ * @param job Pointer to first job in array
+ * @param njobs Number of total jobs to complete
+ * @param stats Pointer to first stat in array: Stat = Quantum when job was started and ended
+ * @param gantt Char list showing what job is being executed; "." meaning idle CPU
+ * @return jobs completed, elapsed quanta
+ **/
+AlgoRet round_robin(const Job* job, int njobs, PerJobStats* stats, char* gantt) {
+	
+	std::queue<Job> rrQ_prep; //Queue for round robin job scheduling [prep feeds into actual working queue]
+	std::queue<char> idQ_prep; //Queue for RR job ID [prep feeds into actual working queue]
+	
+	std::queue<Job> rrQ; //Queue for round robin job scheduling
+	std::queue<char> idQ; //Queue for RR job ID
+	for (int i = 0; i < njobs; i++) {//Move all processes to a queue(should be sorted by arrival order already)
+		rrQ_prep.push(job[i]);
+		idQ_prep.push(i + 'A'); //Give each job an ID with the same index in the queue
+	}
+	
+	int j = 0; //Number of jobs completed
+	int q = 0; //Elapsed quanta
+	Job jP;
+	char id;
+	
+	while (q < QUANTA) { //Begin simulation
+		if (!rrQ_prep.empty() && rrQ_prep.front().arrival <= q) {//check if a new job has arrived
+			rrQ.push(rrQ_prep.front()); //push new job to RR Queue
+			idQ.push(idQ_prep.front());
+			rrQ_prep.pop();
+			idQ_prep.pop();
+		}
+			
+		if (!rrQ.empty()) { //If job is available
+			id = idQ.front();
+			idQ.pop();
+			jP = rrQ.front();
+			rrQ.pop();
+			jP.burst--;
+			
+			gantt[q] = id; //Store char showing what job is being executed at this quanta
+			if (stats[id - 'A'].qbegin == 0) //Set first time running quantum
+				stats[id - 'A'].qbegin = q;
+			if (jP.burst > 0) { //check if job should be readded to RR Queue
+				rrQ.push(jP);
+				idQ.push(id);
+			} else {
+				j++; //Increment number of jobs completed
+				stats[id - 'A'].qend = q + 1; //Store quanta slice that job ends with
+			}
+		} else //nothing in RR Queue
+			gantt[q] = '.';
+		q++; //Go to next quanta
+		
+		if (j >= njobs)
+			break; //No need to continue if jobs are finished
+	}
+	
+	stats[0].qbegin = job[0].arrival;
+	return {j, q}; //jobs completed, elapsed quanta
 }
 
 /*
@@ -359,14 +422,3 @@ AlgoRet preemptive(const Job *job, int njobs, PerJobStats *stats, char *gantt)
 /*
 
 */
-
-
-
-
-
-
-
-
-
-
-
