@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     unsigned char shufbag[BagSize];
     Job job[NJOBS];
     PerJobStats stats[NJOBS];
-    char timechart[QUANTA + MAX_BURST];
+    char timechart[QUANTA + 500];
 
     printf("Seed: 0x%X, Number of tests: %d\n", initSeed, ntests);
 
