@@ -24,6 +24,7 @@
 */
 
 #include "syms.h"
+#include "hpf_non-preemptive.h"
 
 #include <stdio.h>
 
@@ -58,7 +59,7 @@ const Sim simulations[] =
     {"Shortest Job First (non-preemptive)", nullptr},//&sjf},
     {"Shortest Remaining Time (preemptive)", &SRT},
     {"Round Robin", &round_robin},//&round_robin},
-    {"Highest Priority (non-preemptive)", nullptr},//&hpf_non_preemptive},
+    {"Highest Priority (non-preemptive)", &hpf_non_preemptive},//nullptr},//&hpf_non_preemptive},
     {"Highest Priority (preemptive)", &HPF_PREEMPT},//&hpf_preemptive}
     {"HPF-Aging (non-preemptive)", nullptr},//&hpf_preemptive}
     {"HPF-Aging (preemptive)", &HPF_PREEMPT_AGE}//&hpf_preemptive}
