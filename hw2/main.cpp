@@ -1,19 +1,12 @@
 /*
-    Algorithms left to complete:
-    -Round-Robin algo
-    -3 following non-preemptive algos:
-    --HPF,
-    --SJF,
-    --HPF-Aging
-
-    Also:
-    -cpu idle>2 quanta?
-    -report
-
     If using GCC or compatible compiler,
     place all source and header files in the same directory and:
 
     g++ -std=c++11 -Wall -Wextra *.cpp
+
+    Also:
+    -cpu idle>2 quanta?
+    -report
 
 	good resource:
 	https://www.cs.uic.edu/~jbell/CourseNotes/OperatingSystems/5_CPU_Scheduling.html
@@ -32,7 +25,7 @@
 
 #include "syms.h"
 
-#include <stdlib.h>
+#include <stdio.h>
 
 #include <algorithm>
 #include <random>
@@ -277,22 +270,22 @@ AlgoRet fcfs(const Job* job, int njobs, PerJobStats* stats, char* t)
  * @return jobs completed, elapsed quanta
  **/
 AlgoRet round_robin(const Job* job, int njobs, PerJobStats* stats, char* gantt) {
-	
+
 	std::queue<Job> rrQ_prep; //Queue for round robin job scheduling [prep feeds into actual working queue]
 	std::queue<char> idQ_prep; //Queue for RR job ID [prep feeds into actual working queue]
-	
+
 	std::queue<Job> rrQ; //Queue for round robin job scheduling
 	std::queue<char> idQ; //Queue for RR job ID
 	for (int i = 0; i < njobs; i++) {//Move all processes to a queue(should be sorted by arrival order already)
 		rrQ_prep.push(job[i]);
 		idQ_prep.push(i + 'A'); //Give each job an ID with the same index in the queue
 	}
-	
+
 	int j = 0; //Number of jobs completed
 	int q = 0; //Elapsed quanta
 	Job jP;
 	char id;
-	
+
 	while (j <= njobs) { //Begin simulation
 		if (!rrQ_prep.empty() && rrQ_prep.front().arrival <= q) {//check if a new job has arrived
 			rrQ.push(rrQ_prep.front()); //push new job to RR Queue
@@ -300,14 +293,14 @@ AlgoRet round_robin(const Job* job, int njobs, PerJobStats* stats, char* gantt) 
 			rrQ_prep.pop();
 			idQ_prep.pop();
 		}
-			
+
 		if (!rrQ.empty()) { //If job is available
 			id = idQ.front();
 			idQ.pop();
 			jP = rrQ.front();
 			rrQ.pop();
 			jP.burst--;
-			
+
 			gantt[q] = id; //Store char showing what job is being executed at this quanta
 			if (stats[id - 'A'].qbegin == 0) //Set first time running quantum
 				stats[id - 'A'].qbegin = q;
@@ -321,11 +314,11 @@ AlgoRet round_robin(const Job* job, int njobs, PerJobStats* stats, char* gantt) 
 		} else //nothing in RR Queue
 			gantt[q] = '.';
 		q++; //Go to next quanta
-		
+
 		if (j >= njobs)
 			break; //No need to continue if jobs are finished
 	}
-	
+
 	stats[0].qbegin = job[0].arrival;
 	return {j, q}; //jobs completed, elapsed quanta
 }
