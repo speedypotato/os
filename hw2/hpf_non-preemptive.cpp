@@ -1,5 +1,5 @@
 // Author: Erik Xu
-// CS 149 Sec. 2
+// CS 149 Sec. 2, Spring 2018
 // Implementation of HPF Non-preemptive Scheduling Algorithm
 
 #include "hpf_non-preemptive.h"
@@ -101,4 +101,4 @@ AlgoRet hpf_non_preemptive(const Job *job, int njobs, PerJobStats *stats, char *
     } else {
       return {j-int(pque.size()), q};
     }
-}
+} // end of hpf_non_preemptive()
