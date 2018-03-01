@@ -17,21 +17,21 @@ There is a test function to verify correctness. It is not thorough, and only che
 There are 8 algorithms, and each runs on 5 data sets (overriden to 3 in the cmdline here in this report for space saving).
 Algorithm[i] runs for each data set, and then i is advanced.
 
-As for the stats(someone help me here):
-round robin has good response time but sucks overall globally.
+Obsevations:
+Round Robin's response time is far lower than any other algorithm.
 SJF is good but how are you gonna predict burst time in real life?
 FCFS is okay.
 Priority based ones are okay and flexible but more complicated.
 
-Preemption reduces wait but more ctx switches.
+Preemption reduces wait but more context switches.
 
-Now for some real cool stuff: the algo impls.
+Now for some real cool stuff: the algorithm implementations.
 Jonathan did 6-7 (and main...)
 erik did 1
 nick did 1
 
 SJF, HPF (no pre), and HPF-Aging are all very similar (same can be said for their preemptive versions).
-They store pending jobs in a collection, ordered by some huristic. They take the frontmost thing and run it.
+They store pending jobs in a collection, ordered by some heuristic. They take the frontmost job and run it.
 The ordering is based on a comparison on an integer field.
 
 The only thing different is the field!
@@ -44,9 +44,20 @@ HPF compares on priority.
 HPF-Aging also compares on "priority," but I slyly store (initial_priority*5 + arrival time) in that field.
 (promoted 1 priority every 5 secs, and + b/c lower priorty val more impoartant)
 
-pretty flippin neato bandito
-
-HELP ME.
+Analysis and Conclusions:
+Although First Come First Serve is the easiest algorithm to implement and understand, it generally does a pretty mediocre job of 
+everything. Wait times can very a lot due to high burst time processes clogging the queue. We have observed that preemptive algorithms
+have significantly less response times than non-preemptive algorithms.
+Shortest Job First and Shortest Remaining Time both have very optimized performance across the board. For our simulation purposes, these
+algorithms would be the best. However, these two rely on the CPU having prior knowledge of the burst times of the processes they are
+supposed to service. Therefore, these two algorithms have limited practical application.
+Round Robin has the most optimized response time because time is evenly distributed between the processes, giving all of them
+a chance to run.
+Although the Priority Algorithms seem to perform poorly, their advantage is not captured through this simulation due to all processes
+getting assigned random priorities. Presumably in the real world, processes with higher priorities are more important. These leads
+to cases of inefficiency if a high priority process has a large burst time that clogs up the priority queue. This problem is fixed
+by adding aging, which raises the priority of processes that have not been serviced in a long time. Aging appears to improve performance
+of priority algorithms in all respects.
 
 C:\Users\jw\Desktop\spring18\opsys\os\hw2>ssim.exe 3
 Seed: 0xCAFEBEEF, Number of tests: 3
