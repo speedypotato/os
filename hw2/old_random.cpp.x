@@ -24,12 +24,6 @@ typedef std::minstd_rand Rng;
 using std::fill;
 using std::sort;
 
-//random number in [ibegin, iend) exclusive
-unsigned xrandom(Rng& gen, unsigned ibegin, unsigned iend)
-{
-    return ibegin + (gen()%(iend-ibegin));
-}
-
 template<class CmpFunc, bool Aging=false>
 AlgoRet preemptive(const Job *job, int njobs, PerJobStats *stats, char *gantt);
 
@@ -143,7 +137,7 @@ void testFreqs(const Job* job, int njobs, const PerJobStats* stats, const char* 
 int main(int argc, char** argv)
 {
     int ntests;
-    unsigned initSeed;
+    unsigned long long initSeed = INIT_SEED;
 
     if (argc>1)
     {
@@ -151,7 +145,7 @@ int main(int argc, char** argv)
             ntests = 1;
         if (argc==3)
         {
-            if ((initSeed = strtoul(argv[2], NULL, 0)) == 0u)//detect hex from 0x if user want
+            if ((initSeed = strtoull(argv[2], NULL, 0)) == 0u)//detect hex from 0x if user want
                 initSeed = INIT_SEED;
         }
     }
@@ -163,35 +157,33 @@ int main(int argc, char** argv)
 
     static_assert(QUANTA<256u, "");//can fit in u8
     enum{BagSize=QUANTA-1};
-    //unsigned char shufbag[BagSize];
+    unsigned char shufbag[BagSize];
     Job job[NJOBS];
     PerJobStats stats[NJOBS];
     char timechart[QUANTA + 500];
 
-    printf("Seed: 0x%X, Number of tests: %d\n", initSeed, ntests);
+    printf("Seed: 0x%X:%X, Number of tests: %d\n", unsigned(initSeed>>32), unsigned(initSeed), ntests);
 
     for (const Sim sim : simulations)
     {
         //@TODO: remove this
         if (sim.algo==nullptr){ printf("TODO: %s\n", sim.name); continue; }
 
-        //for (int i=0; i<BagSize; ++i) shufbag[i] = i+1;
+        for (int i=0; i<BagSize; ++i) shufbag[i] = i+1;
         Rng rng(initSeed);//each algo gets same data
         double aa_wait=0.0, aa_turnaround=0.0, aa_response=0.0, aa_thruput=0.0;
         printf("\n*** Testing algorithm: %s ***\n", sim.name);
 
         for (int testno=0; testno<ntests; ++testno)
         {
-            //std::shuffle(shufbag, shufbag+BagSize, rng);//rng by ref
+            std::shuffle(shufbag, shufbag+BagSize, rng);//rng by ref
 
             for (int arvtime=0, i=0; i<NJOBS; ++i)
             {
-                unsigned brst;
-
-                job[i].arrival      = arvtime;
-                job[i].burst = brst = xrandom(rng, MIN_BURST, MAX_BURST+1);
-                job[i].priority     = xrandom(rng, 1, 5);
-                arvtime += xrandom(rng, 1, brst+3);
+                job[i].arrival = arvtime;
+                job[i].burst = MIN_BURST + (rng() % BURST_SPAN);
+                job[i].priority = 1u + (rng() % 4u);//[1, 5u)
+                arvtime = shufbag[i];
             }
             sort(job, job+NJOBS, [](Job a, Job b){return a.arrival < b.arrival;});
             //implicit //for (int i=0; i<NJOBS; ++i) job[i].id = i;

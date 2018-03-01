@@ -5,7 +5,7 @@
 #include "hpf_non-preemptive.h"
 
 // Data structure for HPF Non-preemptive Priority Queue Element
-struct HPFNonpreQueueData 
+struct HPFNonpreQueueData
 {
     uint8_t  id;       // id of the job
     uint16_t priority; // SRT doesn't need this but don't want to make more types.
@@ -25,7 +25,7 @@ struct HPFNonpreComparator
     }
 };
 
-// Convert Job to HPF Non-preemptive queue element 
+// Convert Job to HPF Non-preemptive queue element
 HPFNonpreQueueData ConvertToHPFData(const Job& jb, unsigned id)
 {
     HPFNonpreQueueData dat;   // object returned
@@ -75,11 +75,11 @@ AlgoRet hpf_non_preemptive(const Job *job, int njobs, PerJobStats *stats, char *
       fill(gantt+q, gantt+comptime, id+'A');
       q = comptime; // set current quanta to completion time of current job
       pque.pop();   // take the completed job
-      
+
       // put into the queue of jobs that have arrived while the previous job was running
       for (int i = j; i < njobs; ++i) {
         // check if the arrival of the job
-        if (job[i].arrival <= q) {
+        if (job[i].arrival <= q) { //<-------
           pque.push(ConvertToHPFData(job[i],i));
           j++;
         }
@@ -102,3 +102,24 @@ AlgoRet hpf_non_preemptive(const Job *job, int njobs, PerJobStats *stats, char *
       return {j-int(pque.size()), q};
     }
 } // end of hpf_non_preemptive()
+
+/*
+    (Jonathan):
+    I am unsure about this, but this may be incorrect for some input:
+
+    If before line 82 say q is 80 and j = njobs-3
+    and that the three remaining jobs have arrival times and bursts of
+    {71, 1},
+    {72, 1},
+    {73, 1}
+    So they all get inserted b/c arrival times < q=80
+
+    Then j==njobs and the algo terminates.
+    But QUANTA is 100, and can still serve these jobs at times
+    80,
+    81,
+    82
+    Then last comptime is 83
+
+    Stats aren't reflected.
+*/

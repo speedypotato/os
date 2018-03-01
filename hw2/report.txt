@@ -1,0 +1,790 @@
+Someone help me with this, content(esp stats) make snazzy. prob not final in .txt.
+
+We did the extra credit in this assignment, implementing a total of 6+2 algorithms.
+The test code is structured with an outermost loop that iterates for each algorithm, stored in a function pointer.
+The RNG is reseeded with the same value before each different algorithm runs, so they all get the same data.
+The data is not totally random, but somewhat induced so no two jobs may have the same arrival time and to limit idle cpu time.
+
+Each algorithm has the same signature. Each algorithm fills in a gantt chart and the begin and end service time of a job, if it gets serviced at all.
+This is simpler, and turn-around, wait, and response are calulated outside after the algorithm finishes before being printed.
+
+            int const response   = stats[i].qbegin - job[i].arrival;
+            int const turnaround = stats[i].qend - job[i].arrival;
+            int const wait       = turnaround - job[i].burst;
+
+There is a test function to verify correctness. It is not thorough, and only checks that frequencies are consistent.
+
+There are 8 algorithms, and each runs on 5 data sets (overriden to 3 in the cmdline here in this report for space saving).
+Algorithm[i] runs for each data set, and then i is advanced.
+
+As for the stats(someone help me here):
+round robin has good response time but sucks overall globally.
+SJF is good but how are you gonna predict burst time in real life?
+FCFS is okay.
+Priority based ones are okay and flexible but more complicated.
+
+Preemption reduces wait but more ctx switches.
+
+Now for some real cool stuff: the algo impls.
+Jonathan did 6-7 (and main...)
+erik did 1
+nick did 1
+
+SJF, HPF (no pre), and HPF-Aging are all very similar (same can be said for their preemptive versions).
+They store pending jobs in a collection, ordered by some huristic. They take the frontmost thing and run it.
+The ordering is based on a comparison on an integer field.
+
+The only thing different is the field!
+
+So I knocked all three of these in one go with a template function, which decides how data is initially inserted into the collection
+and what integer field to do the comparison on. 
+
+SJF compares on remaing burst time.
+HPF compares on priority.
+HPF-Aging also compares on "priority," but I slyly store (initial_priority*5 + arrival time) in that field.
+(promoted 1 priority every 5 secs, and + b/c lower priorty val more impoartant)
+
+pretty flippin neato bandito
+
+HELP ME.
+
+C:\Users\jw\Desktop\spring18\opsys\os\hw2>ssim.exe 3
+Seed: 0xCAFEBEEF, Number of tests: 3
+
+*** Testing algorithm: First Come First Serve ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       1     4        4 :        5    5          9
+ C       4     9        1 :        6    6         15
+ D      15     6        2 :        4    4         10
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :        7    7         14
+ J      63     6        4 :        8    8         14
+ K      66     4        3 :       11   11         15
+ L      69    12        2 :       12   12         24
+ M      75     9        4 :       18   18         27
+ N      84     9        1 :        ~    ~          ~
+
+
+Average wait       : 101/13 =  7.769
+Average response   : 101/13 =  7.769
+Average turnaround : 203/13 = 15.615
+Throughput: 13/102 = 0.127451 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBCCCCCCCCCDDDDDDEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHIIIIIIIJJJJJJKKKKLLLLLLLLLLLLMMMMMMMMM
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0    0         15
+ D      17    10        1 :       14   14         24
+ E      24    15        4 :       17   17         32
+ F      28     4        1 :       28   28         32
+ G      31    10        3 :       29   29         39
+ H      39     3        4 :       31   31         34
+ I      43     6        2 :       30   30         36
+ J      46    10        3 :       33   33         43
+ K      57    15        2 :       32   32         47
+ L      61     3        4 :        ~    ~          ~
+ M      63    16        3 :        ~    ~          ~
+ N      66    11        4 :        ~    ~          ~
+
+
+Average wait       : 214/11 = 19.455
+Average response   : 214/11 = 19.455
+Average turnaround : 315/11 = 28.636
+Throughput: 11/104 = 0.105769 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CCCCCCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEEEEEEFFFFGGGGGGGGGGHHHIIIIIIJJJJJJJJJJKKKKKKKKKKKKKKK
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       3    12        2 :        3    3         15
+ C       9    16        4 :        9    9         25
+ D      15     4        2 :       19   19         23
+ E      21     8        1 :       17   17         25
+ F      30    10        3 :       16   16         26
+ G      40    16        3 :       16   16         32
+ H      46    14        1 :       26   26         40
+ I      49     9        1 :       37   37         46
+ J      51    13        1 :       44   44         57
+ K      54     3        1 :        ~    ~          ~
+ L      57    13        3 :        ~    ~          ~
+ M      60     5        3 :        ~    ~          ~
+ N      61     9        3 :        ~    ~          ~
+
+
+Average wait       : 187/10 = 18.700
+Average response   : 187/10 = 18.700
+Average turnaround : 295/10 = 29.500
+Throughput: 10/108 = 0.092593 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBBBBBBBBBCCCCCCCCCCCCCCCCDDDDEEEEEEEEFFFFFFFFFFGGGGGGGGGGGGGGGGHHHHHHHHHHHHHHIIIIIIIIIJJJJJJJJJJJJJ
+
+All 3 tests for [First Come First Serve] done, averages:
+Wait      : 15.308
+Response  : 15.308
+Turnaround: 24.584
+Throughput: 10.860 per 100 quanta
+
+*** Testing algorithm: Shortest Job First (non-preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       1     4        4 :        5    5          9
+ C       4     9        1 :        6    6         15
+ D      15     6        2 :        4    4         10
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :       17   17         24
+ J      63     6        4 :        1    1          7
+ K      66     4        3 :        4    4          8
+ L      69    12        2 :       30   30         42
+ M      75     9        4 :        6    6         15
+ N      84     9        1 :        6    6         15
+
+
+Average wait       : 109/14 =  7.786
+Average response   : 109/14 =  7.786
+Average turnaround : 220/14 = 15.714
+Throughput: 14/111 = 0.126126 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBCCCCCCCCCDDDDDDEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHJJJJJJKKKKIIIIIIIMMMMMMMMMNNNNNNNNNLLLLLLLLLLLL
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0    0         15
+ D      17    10        1 :       18   18         28
+ E      24    15        4 :        ~    ~          ~
+ F      28     4        1 :        3    3          7
+ G      31    10        3 :       23   23         33
+ H      39     3        4 :        6    6          9
+ I      43     6        2 :        5    5         11
+ J      46    10        3 :       21   21         31
+ K      57    15        2 :       31   31         46
+ L      61     3        4 :        3    3          6
+ M      63    16        3 :        ~    ~          ~
+ N      66    11        4 :       11   11         22
+
+
+Average wait       : 121/12 = 10.083
+Average response   : 121/12 = 10.083
+Average turnaround : 221/12 = 18.417
+Throughput: 12/103 = 0.116505 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CCCCCCCCCCCCCCCFFFFDDDDDDDDDDHHHIIIIIIGGGGGGGGGGLLLJJJJJJJJJJNNNNNNNNNNNKKKKKKKKKKKKKKK
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       3    12        2 :        3    3         15
+ C       9    16        4 :       31   31         47
+ D      15     4        2 :        3    3          7
+ E      21     8        1 :        1    1          9
+ F      30    10        3 :        0    0         10
+ G      40    16        3 :        ~    ~          ~
+ H      46    14        1 :        ~    ~          ~
+ I      49     9        1 :       10   10         19
+ J      51    13        1 :       31   31         44
+ K      54     3        1 :        2    2          5
+ L      57    13        3 :       38   38         51
+ M      60     5        3 :        8    8         13
+ N      61     9        3 :       12   12         21
+
+
+Average wait       : 139/12 = 11.583
+Average response   : 139/12 = 11.583
+Average turnaround : 247/12 = 20.583
+Throughput: 12/108 = 0.111111 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBBBBBBBBBDDDDEEEEEEEEFFFFFFFFFFCCCCCCCCCCCCCCCCKKKIIIIIIIIIMMMMMNNNNNNNNNJJJJJJJJJJJJJLLLLLLLLLLLLL
+
+All 3 tests for [Shortest Job First (non-preemptive)] done, averages:
+Wait      :  9.817
+Response  :  9.817
+Turnaround: 18.238
+Throughput: 11.791 per 100 quanta
+
+*** Testing algorithm: Shortest Remaining Time (preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    4         10
+ B       1     4        4 :        0    0          4
+ C       4     9        1 :        6    6         15
+ D      15     6        2 :        4    4         10
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7   18         34
+ G      43     5        4 :        0    0          5
+ H      50     6        4 :        0    0          6
+ I      57     7        4 :       17   17         24
+ J      63     6        4 :        1    1          7
+ K      66     4        3 :        4    4          8
+ L      69    12        2 :       30   30         42
+ M      75     9        4 :        6    6         15
+ N      84     9        1 :        6    6         15
+
+
+Average wait       : 101/14 =  7.214
+Average response   :  86/14 =  6.143
+Average turnaround : 212/14 = 15.143
+Throughput: 14/111 = 0.126126 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+ABBBBAAAAACCCCCCCCCDDDDDDEEEEEEEEEEEEFFFFFFGGGGGFFHHHHHHFFFFFFFFJJJJJJKKKKIIIIIIIMMMMMMMMMNNNNNNNNNLLLLLLLLLLLL
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0   46         61
+ D      17    10        1 :        0    0         10
+ E      24    15        4 :        ~    ~          ~
+ F      28     4        1 :        0    0          4
+ G      31    10        3 :        1    1         11
+ H      39     3        4 :        3    3          6
+ I      43     6        2 :        2    2          8
+ J      46    10        3 :        5    5         15
+ K      57    15        2 :       31   31         46
+ L      61     3        4 :        0    0          3
+ M      63    16        3 :        ~    ~          ~
+ N      66    11        4 :       11   11         22
+
+
+Average wait       :  99/12 =  8.250
+Average response   :  53/12 =  4.417
+Average turnaround : 199/12 = 16.583
+Throughput: 12/103 = 0.116505 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CDDDDDDDDDDCFFFFGGGGGGGGGGHHHIIIIIIJJJJJJJJJJLLLCCCCCCCCCCCCCNNNNNNNNNNNKKKKKKKKKKKKKKK
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       3    12        2 :        3    3         15
+ C       9    16        4 :       31   31         47
+ D      15     4        2 :        3    3          7
+ E      21     8        1 :        1    1          9
+ F      30    10        3 :        0    0         10
+ G      40    16        3 :        ~    ~          ~
+ H      46    14        1 :        ~    ~          ~
+ I      49     9        1 :       10   15         24
+ J      51    13        1 :       44   44         57
+ K      54     3        1 :        2    2          5
+ L      57    13        3 :       25   25         38
+ M      60     5        3 :        0    0          5
+ N      61     9        3 :       12   12         21
+
+
+Average wait       : 136/12 = 11.333
+Average response   : 131/12 = 10.917
+Average turnaround : 244/12 = 20.333
+Throughput: 12/108 = 0.111111 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBBBBBBBBBDDDDEEEEEEEEFFFFFFFFFFCCCCCCCCCCCCCCCCKKKIMMMMMIIIIIIIINNNNNNNNNLLLLLLLLLLLLLJJJJJJJJJJJJJ
+
+All 3 tests for [Shortest Remaining Time (preemptive)] done, averages:
+Wait      :  8.933
+Response  :  7.159
+Turnaround: 17.353
+Throughput: 11.791 per 100 quanta
+
+*** Testing algorithm: Round Robin ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    6         12
+ B       1     4        4 :        1    6         10
+ C       4     9        1 :        2    9         18
+ D      15     6        2 :        1    7         13
+ E      20    12        4 :        2   11         23
+ F      30    16        4 :        1   19         35
+ G      43     5        4 :        1    6         11
+ H      50     6        4 :        2   12         18
+ I      57     7        4 :        2   17         24
+ J      63     6        4 :        3   18         24
+ K      66     4        3 :        3   13         17
+ L      69    12        2 :        3   29         41
+ M      75     9        4 :        4   23         32
+ N      84     9        1 :        3   18         27
+
+
+Average wait       : 194/14 = 13.857
+Average response   :  28/14 =  2.000
+Average turnaround : 305/14 = 21.786
+Throughput: 14/111 = 0.126126 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AABABACBACBACCCCDCDCDCEDEDEDEEEFEFEFEFEFEFEFGFGFGFGFHGFHFHFIHFIHFIJHIKJILKJILKJMILKJMLJNMLNMLNMLNMLNMLNMLNMLNLN
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0   47         62
+ D      17    10        1 :        1   26         36
+ E      24    15        4 :        2   73         88
+ F      28     4        1 :        3   16         20
+ G      31    10        3 :        4   58         68
+ H      39     3        4 :        5   17         20
+ I      43     6        2 :        6   38         44
+ J      46    10        3 :        7   57         67
+ K      57    15        2 :        6   60         75
+ L      61     3        4 :        6   22         25
+ M      63    16        3 :        7   55         71
+ N      66    11        4 :        8   49         60
+
+
+Average wait       : 518/14 = 37.000
+Average response   :  55/14 =  3.929
+Average turnaround : 649/14 = 46.357
+Throughput: 14/134 = 0.104478 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CCDCDCDCDCEDCEDFCEDGFCEDGFCEHDGFCIEHDJGCIEHJGCIKEJGLCIMKEJNGLCIMKEJNGLIMKEJNGMKEJNGMKEJNMKEJNMKEJNMKNMKNMKNMKNMKMKMKMM
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    2          8
+ B       3    12        2 :        1   18         30
+ C       9    16        4 :        1   43         59
+ D      15     4        2 :        2    9         13
+ E      21     8        1 :        3   21         29
+ F      30    10        3 :        3   45         55
+ G      40    16        3 :        3   81         97
+ H      46    14        1 :        4   74         88
+ I      49     9        1 :        5   57         66
+ J      51    13        1 :        5   71         84
+ K      54     3        1 :        6   22         25
+ L      57    13        3 :        7   68         81
+ M      60     5        3 :        8   36         41
+ N      61     9        3 :        9   55         64
+
+
+Average wait       : 602/14 = 43.000
+Average response   :  57/14 =  4.071
+Average turnaround : 740/14 = 52.857
+Throughput: 14/138 = 0.101449 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAABABABBCBCBCBCDBCDBCDEBCDEBCEBFCEFCEFCEFGCEFGCEHFGCIHJFGCKIHJLFGCMKNIHJLFGMKNIHJLFGMNIHJLGMNIHJLGMNIHJLGNIHJLGNIHJLGNHJLGNHJLGHJLGHJLGL
+
+All 3 tests for [Round Robin] done, averages:
+Wait      : 31.286
+Response  :  3.333
+Turnaround: 40.333
+Throughput: 11.068 per 100 quanta
+
+*** Testing algorithm: Highest Priority (non-preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       1     4        4 :       20   20         24
+ C       4     9        1 :        2    2         11
+ D      15     6        2 :        0    0          6
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :        7    7         14
+ J      63     6        4 :       33   33         39
+ K      66     4        3 :       17   17         21
+ L      69    12        2 :        2    2         14
+ M      75     9        4 :        ~    ~          ~
+ N      84     9        1 :        3    3         12
+
+
+Average wait       : 114/13 =  8.769
+Average response   : 114/13 =  8.769
+Average turnaround : 216/13 = 16.615
+Throughput: 13/102 = 0.127451 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAACCCCCCCCCDDDDDDBBBBEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHIIIIIIILLLLLLLLLLLLKKKKNNNNNNNNNJJJJJJ
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0    0         15
+ D      17    10        1 :       14   14         24
+ E      24    15        4 :        ~    ~          ~
+ F      28     4        1 :       13   13         17
+ G      31    10        3 :       20   20         30
+ H      39     3        4 :        ~    ~          ~
+ I      43     6        2 :        2    2          8
+ J      46    10        3 :       30   30         40
+ K      57    15        2 :        4    4         19
+ L      61     3        4 :        ~    ~          ~
+ M      63    16        3 :       23   23         39
+ N      66    11        4 :        ~    ~          ~
+
+
+Average wait       : 106/10 = 10.600
+Average response   : 106/10 = 10.600
+Average turnaround : 205/10 = 20.500
+Throughput: 10/102 = 0.098039 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CCCCCCCCCCCCCCCDDDDDDDDDDFFFFIIIIIIGGGGGGGGGGKKKKKKKKKKKKKKKJJJJJJJJJJMMMMMMMMMMMMMMMM
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       3    12        2 :        3    3         15
+ C       9    16        4 :        ~    ~          ~
+ D      15     4        2 :        3    3          7
+ E      21     8        1 :        1    1          9
+ F      30    10        3 :        0    0         10
+ G      40    16        3 :        0    0         16
+ H      46    14        1 :       10   10         24
+ I      49     9        1 :       21   21         30
+ J      51    13        1 :       28   28         41
+ K      54     3        1 :       38   38         41
+ L      57    13        3 :       38   38         51
+ M      60     5        3 :        ~    ~          ~
+ N      61     9        3 :        ~    ~          ~
+
+
+Average wait       : 142/11 = 12.909
+Average response   : 142/11 = 12.909
+Average turnaround : 250/11 = 22.727
+Throughput: 11/108 = 0.101852 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBBBBBBBBBDDDDEEEEEEEEFFFFFFFFFFGGGGGGGGGGGGGGGGHHHHHHHHHHHHHHIIIIIIIIIJJJJJJJJJJJJJKKKLLLLLLLLLLLLL
+
+All 3 tests for [Highest Priority (non-preemptive)] done, averages:
+Wait      : 10.759
+Response  : 10.759
+Turnaround: 19.948
+Throughput: 10.911 per 100 quanta
+
+*** Testing algorithm: Highest Priority (preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0   19         25
+ B       1     4        4 :       12   18         22
+ C       4     9        1 :        0    0          9
+ D      15     6        2 :        0    0          6
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :        7   41         48
+ J      63     6        4 :        ~    ~          ~
+ K      66     4        3 :        0   12         16
+ L      69    12        2 :        0    0         12
+ M      75     9        4 :       18   18         27
+ N      84     9        1 :        0    0          9
+
+
+Average wait       : 138/13 = 10.615
+Average response   :  67/13 =  5.154
+Average turnaround : 243/13 = 18.692
+Throughput: 13/105 = 0.123810 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAACCCCCCCCCBBDDDDDDBBAAEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHIIKKKLLLLLLLLLLLLKIINNNNNNNNNMMMMMMMMMIII
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0   14         29
+ D      17    10        1 :        0    0         10
+ E      24    15        4 :        ~    ~          ~
+ F      28     4        1 :        0    0          4
+ G      31    10        3 :       20   51         61
+ H      39     3        4 :        ~    ~          ~
+ I      43     6        2 :        2    2          8
+ J      46    10        3 :       46   46         56
+ K      57    15        2 :        0    0         15
+ L      61     3        4 :        ~    ~          ~
+ M      63    16        3 :        9    9         25
+ N      66    11        4 :        ~    ~          ~
+
+
+Average wait       : 122/10 = 12.200
+Average response   :  77/10 =  7.700
+Average turnaround : 221/10 = 22.100
+Throughput: 10/102 = 0.098039 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CDDDDDDDDDDCFFFFCCCCCCCCCCCCCIIIIIIGGGGGGKKKKKKKKKKKKKKKMMMMMMMMMMMMMMMMGGGGJJJJJJJJJJ
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0  100        106
+ B       3    12        2 :        0    0         12
+ C       9    16        4 :       10   95        111
+ D      15     4        2 :        0    0          4
+ E      21     8        1 :        0    0          8
+ F      30    10        3 :        0    0         10
+ G      40    16        3 :        0   48         64
+ H      46    14        1 :        0    0         14
+ I      49     9        1 :       27   27         36
+ J      51    13        1 :        9    9         22
+ K      54     3        1 :       19   19         22
+ L      57    13        3 :        ~    ~          ~
+ M      60     5        3 :        ~    ~          ~
+ N      61     9        3 :       24   24         33
+
+
+Average wait       : 322/12 = 26.833
+Average response   :  89/12 =  7.417
+Average turnaround : 442/12 = 36.833
+Throughput: 12/120 = 0.100000 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAABBBBBBBBBBBBDDDDCCEEEEEEEEAFFFFFFFFFFGGGGGGHHHHHHHHHHHHHHJJJJJJJJJJJJJKKKIIIIIIIIINNNNNNNNNGGGGGGGGGGAACCCCCCCCCCCCCC
+
+All 3 tests for [Highest Priority (preemptive)] done, averages:
+Wait      : 16.550
+Response  :  6.757
+Turnaround: 25.875
+Throughput: 10.728 per 100 quanta
+
+*** Testing algorithm: HPF-Aging (non-preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       1     4        4 :       14   14         18
+ C       4     9        1 :        2    2         11
+ D      15     6        2 :        4    4         10
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :        7    7         14
+ J      63     6        4 :       24   24         30
+ K      66     4        3 :       17   17         21
+ L      69    12        2 :        2    2         14
+ M      75     9        4 :        ~    ~          ~
+ N      84     9        1 :        9    9         18
+
+
+Average wait       : 109/13 =  8.385
+Average response   : 109/13 =  8.385
+Average turnaround : 211/13 = 16.231
+Throughput: 13/102 = 0.127451 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAACCCCCCCCCBBBBDDDDDDEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHIIIIIIILLLLLLLLLLLLKKKKJJJJJJNNNNNNNNN
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0    0         15
+ D      17    10        1 :       14   14         24
+ E      24    15        4 :       21   21         36
+ F      28     4        1 :       13   13         17
+ G      31    10        3 :       29   29         39
+ H      39     3        4 :       37   37         40
+ I      43     6        2 :       27   27         33
+ J      46    10        3 :       33   33         43
+ K      57    15        2 :       32   32         47
+ L      61     3        4 :        ~    ~          ~
+ M      63    16        3 :        ~    ~          ~
+ N      66    11        4 :        ~    ~          ~
+
+
+Average wait       : 206/11 = 18.727
+Average response   : 206/11 = 18.727
+Average turnaround : 307/11 = 27.909
+Throughput: 11/104 = 0.105769 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CCCCCCCCCCCCCCCDDDDDDDDDDFFFFEEEEEEEEEEEEEEEGGGGGGGGGGIIIIIIHHHJJJJJJJJJJKKKKKKKKKKKKKKK
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    0          6
+ B       3    12        2 :        3    3         15
+ C       9    16        4 :       21   21         37
+ D      15     4        2 :        3    3          7
+ E      21     8        1 :        1    1          9
+ F      30    10        3 :       16   16         26
+ G      40    16        3 :       39   39         55
+ H      46    14        1 :       10   10         24
+ I      49     9        1 :       21   21         30
+ J      51    13        1 :       44   44         57
+ K      54     3        1 :        ~    ~          ~
+ L      57    13        3 :        ~    ~          ~
+ M      60     5        3 :        ~    ~          ~
+ N      61     9        3 :        ~    ~          ~
+
+
+Average wait       : 158/10 = 15.800
+Average response   : 158/10 = 15.800
+Average turnaround : 266/10 = 26.600
+Throughput: 10/108 = 0.092593 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAABBBBBBBBBBBBDDDDEEEEEEEECCCCCCCCCCCCCCCCFFFFFFFFFFHHHHHHHHHHHHHHIIIIIIIIIGGGGGGGGGGGGGGGGJJJJJJJJJJJJJ
+
+All 3 tests for [HPF-Aging (non-preemptive)] done, averages:
+Wait      : 14.304
+Response  : 14.304
+Turnaround: 23.580
+Throughput: 10.860 per 100 quanta
+
+*** Testing algorithm: HPF-Aging (preemptive) ***
+
+Test no: 0
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0    9         15
+ B       1     4        4 :       14   14         18
+ C       4     9        1 :        0    0          9
+ D      15     6        2 :        4    4         10
+ E      20    12        4 :        5    5         17
+ F      30    16        4 :        7    7         23
+ G      43     5        4 :       10   10         15
+ H      50     6        4 :        8    8         14
+ I      57     7        4 :        7    7         14
+ J      63     6        4 :       24   24         30
+ K      66     4        3 :       17   17         21
+ L      69    12        2 :        2    2         14
+ M      75     9        4 :        ~    ~          ~
+ N      84     9        1 :        9    9         18
+
+
+Average wait       : 116/13 =  8.923
+Average response   : 107/13 =  8.231
+Average turnaround : 218/13 = 16.769
+Throughput: 13/102 = 0.127451 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAACCCCCCCCCAABBBBDDDDDDEEEEEEEEEEEEFFFFFFFFFFFFFFFFGGGGGHHHHHHIIIIIIILLLLLLLLLLLLKKKKJJJJJJNNNNNNNNN
+
+Test no: 1
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        3 :        0    0          6
+ B       7     7        1 :        0    0          7
+ C      16    15        2 :        0   10         25
+ D      17    10        1 :        0    0         10
+ E      24    15        4 :       21   21         36
+ F      28     4        1 :       13   13         17
+ G      31    10        3 :       29   29         39
+ H      39     3        4 :       37   37         40
+ I      43     6        2 :       27   27         33
+ J      46    10        3 :       33   33         43
+ K      57    15        2 :       32   32         47
+ L      61     3        4 :        ~    ~          ~
+ M      63    16        3 :        ~    ~          ~
+ N      66    11        4 :        ~    ~          ~
+
+
+Average wait       : 202/11 = 18.364
+Average response   : 192/11 = 17.455
+Average turnaround : 303/11 = 27.545
+Throughput: 11/104 = 0.105769 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAAAAA.BBBBBBB..CDDDDDDDDDDCCCCCCCCCCCCCCFFFFEEEEEEEEEEEEEEEGGGGGGGGGGIIIIIIHHHJJJJJJJJJJKKKKKKKKKKKKKKK
+
+Test no: 2
+ID Arrival Burst Priority : Response Wait Turnaround
+ A       0     6        4 :        0   12         18
+ B       3    12        2 :        0    0         12
+ C       9    16        4 :       21   21         37
+ D      15     4        2 :        3    3          7
+ E      21     8        1 :        1    1          9
+ F      30    10        3 :       16   16         26
+ G      40    16        3 :       39   39         55
+ H      46    14        1 :       10   10         24
+ I      49     9        1 :       21   21         30
+ J      51    13        1 :       44   44         57
+ K      54     3        1 :        ~    ~          ~
+ L      57    13        3 :        ~    ~          ~
+ M      60     5        3 :        ~    ~          ~
+ N      61     9        3 :        ~    ~          ~
+
+
+Average wait       : 167/10 = 16.700
+Average response   : 155/10 = 15.500
+Average turnaround : 275/10 = 27.500
+Throughput: 10/108 = 0.092593 per single quantum
+
+Execution chart:
+0         1         2         3         4         5         6         7         8         9         10        11        12
+0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 0 2 4 6 8
+AAABBBBBBBBBBBBAAADDDDEEEEEEEECCCCCCCCCCCCCCCCFFFFFFFFFFHHHHHHHHHHHHHHIIIIIIIIIGGGGGGGGGGGGGGGGJJJJJJJJJJJJJ
+
+All 3 tests for [HPF-Aging (preemptive)] done, averages:
+Wait      : 14.662
+Response  : 13.728
+Turnaround: 23.938
+Throughput: 10.860 per 100 quanta
+
+C:\Users\jw\Desktop\spring18\opsys\os\hw2>

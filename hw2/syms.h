@@ -4,9 +4,9 @@
 #ifndef H_SYMS
 #define H_SYMS
 
-#define INIT_SEED 0xcafebeef//use same rng seed so each algo uses same data
+#define INIT_SEED 0xcafebeefu//use same rng seed so each algo uses same data
 #define QUANTA 100
-#define NJOBS 12
+#define NJOBS 14
 #define MAX_BURST 16
 #define MIN_BURST 3
 #define BURST_SPAN (MAX_BURST-MIN_BURST+1u)
