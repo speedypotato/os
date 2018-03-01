@@ -1,3 +1,8 @@
+3/1
+
+PLEASE GO OVER REPORT and tidy it up. WOuld help if can do so and print it before class.
+Also if no one objects, lets sign up to meet with grader after class?
+
 2/22
 
 The following four functions need be completed:
