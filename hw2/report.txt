@@ -23,15 +23,15 @@ SJF is good but how are you gonna predict burst time in real life?
 FCFS is okay.
 Priority based ones are okay and flexible but more complicated.
 
-Preemption reduces wait but more ctx switches.
+Preemption reduces wait but more context switches.
 
-Now for some real cool stuff: the algo impls.
+Now for some real cool stuff: the algorithm implementations.
 Jonathan did 6-7 (and main...)
 erik did 1
 nick did 1
 
 SJF, HPF (no pre), and HPF-Aging are all very similar (same can be said for their preemptive versions).
-They store pending jobs in a collection, ordered by some huristic. They take the frontmost thing and run it.
+They store pending jobs in a collection, ordered by some heuristic. They take the frontmost job and run it.
 The ordering is based on a comparison on an integer field.
 
 The only thing different is the field!
