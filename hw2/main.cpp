@@ -2,15 +2,6 @@
     If using GCC or compatible compiler,
     place all source and header files in the same directory and:
     g++ -std=c++11 -Wall -Wextra *.cpp
-
-	Notes (Jonathan):
-	To avoid ambiguity, the job arrival times are rigged so no two jobs can arrive at the same time.
-	This is done by shuffling array of bytes containing [1,100) exclusive,
-	There are other ways to generate a random permutation span, some without extra space
-	like lfsr's, but this seemed simplest. The space is small and the assignment focus is elsewhere.
-	Also, one job(id 0: A) will always arrive at quantum 0 (why the shufbag does not have 0).
-
-    ^Do something about cpu being idle for >2 quanta?
 */
 
 #include "syms.h"
