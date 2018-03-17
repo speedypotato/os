@@ -1,0 +1,11 @@
+I had a "lock free" idea for only High and Low sellers, using atomic_fetch_add.
+
+High thread has index i that starts from 0. To reserve next seat, reads i, then stores i+1. These can be normal ops
+if only 1 High seller.
+
+Low sellers have shared index j starting at 99. To get an exclusive index, i.e reserve a seat slot, they do
+atomic_fetch_add(&j, -1). Since this operation is atomic, the Low sellers cannot step on each other.
+
+But what happens when the walls close in, i gets close to j?
+
+For the sellers, after they do atomic (pos = j--),  they read 
