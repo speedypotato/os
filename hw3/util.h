@@ -61,7 +61,7 @@ void byte_copy(const void* from, const void* fend, void* to)
 }
 
 #define XMALLOC_UNITS(T, N) ((T *)xmalloc(N*sizeof(T)))
-#define QSORT_TYPED(B,E,F) do{ __typeof(B) _P = (B); qsort(_P, (E)-_P, sizeof(*_P), F); }while(0)
+#define QSORT_TYPED(B,E,F) do{ __typeof(E) _P = (B); qsort(_P, (E)-_P, sizeof(*_P), F); }while(0)
 #define UNUSED_ARG(A) (void)A
 
 /*
@@ -69,6 +69,8 @@ void byte_copy(const void* from, const void* fend, void* to)
     implementation may vary depending on library vendor, and the ability
     to reproduce results across environments is desired.
     Also, rand() making the state global is an unwanted abstraction(and not good for multi-threading).
+
+    ...realized this whole thing is not really reproducible due to threads, locking, and sleeping
 
     Adapted from following link, with the modification to only return the high 32 bits.
     https://en.wikipedia.org/wiki/Xorshift#xorshift*

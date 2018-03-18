@@ -4,7 +4,8 @@
 -use 0 indexing for everything
 -sellers are identified by a letter, customers by integer id
 -more specific on how seat fill ordering should happen taking various cases into account
--we make "1 minute" be 64 milliseconds(msec) in program execution time.
+-we make "1 minute" be 10 milliseconds(msec) in program execution time.
+-cv used once at start so threads begin at same time, but after that only mutex is used to protect slots
 
 There are 10 by 10 seats as a 1d array[100]
 
@@ -28,7 +29,11 @@ Similar logic if lower 'y' gap becomes full first.
 6 are low-price sellers, they are like the high seller, but there are multiple of them and
 they start at i=99 and decrement down. 4-7 minutes
 
-"MB01" means: slot sold to Mid seller B's customer 1
+//"MB01" means: slot sold to Mid seller B's customer 1
+
+"21MB01:555" means: 21'st sold to Mid seller B's customer id 1 at 555
+
+use a terminal of at least width 10*10 + 10 characters
 
 HA00 HA01 HA02 HA03
 HA00 HA01 xxxx xxxx
