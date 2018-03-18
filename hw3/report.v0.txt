@@ -1,0 +1,47 @@
+#Modifications
+
+All everything is 0 indexed. Thread IDs and customer IDs all start with 0 to keep things consistent with what we're doing. Format for each customer is changed slightly.
+
+ReservationID SellerID CustomerID : Time of reservation
+Example:
+12HA00:110
+Reservation 12 Sold by High Priority Thread A with HA's Customer 0 at time 110.
+
+The one minute time quantum is made into 10 milliseconds. Condition variable will be used to start threads all at the same time. Mutex is used to lock seats.
+Our 10 by 10 seating arrangement is built with a 1d array of 100 elements and printed in a 10x10 matrix format.
+
+#Problem Description
+
+Seller first reserves seat and mark it occupied. Seller then spends random amount of time servicing customer and is put to sleep. All sellers have N customers. Threads may
+sleep until there's another customer that arrives. The three starting positions are at the bottom, middle, and top of the matrix. The gaps between the middle and top and the
+middle and bottom are shrinking. Example function that covers this.
+
+int sell_back_to_mid(void)
+{
+    if (giD >= giC)
+        return giD--;
+    else
+        return sell_mid_to_front();
+}
+
+If selling from the back towards the middle is full, then we move from the middle selling towards the front. If that fills up, then the concert is full. Same philosophy for
+all threads, just in different directions.
+
+The one high priority thread serves a customer in 1 or 2 minutes and starts at position 0 and starts selling up. Three medium priority threads serve customers in 2, 3, or 4
+minutes and start at position 50. Medium threads alternate between selling towards the top and the bottom. Six low priorty threads serve customers in 4, 5, 6, or 7 minutes.
+Start at position 99 and sell downwards.
+
+#Thread Function and Main
+
+Start randomizing the arrival and burst times of customers. Threads need to wait on the condition variable. Make sure mutex is unlocked so no one sleeps with it. Once a thread
+is ready to work, they get the lock and start selling. Release lock right after. End function if the concert is full or all customers have been serviced. At the end of 60
+minutes, threads should finish selling if there are still seats. All remaining customers leave immediately.Main adds threads, runs the thread function, destroys the condition 
+variable and mutex, then prints the output.
+
+#Output
+All information below should be reflected in the output.
+Customer arrives at the tail of the queue.
+Customer is served and assigned a seat or is told the concert is sold out.
+Customer completes purchase and leaves.
+Print the final seating chart.
+
