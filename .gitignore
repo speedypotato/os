@@ -36,6 +36,12 @@
 *.depend
 *.cbp
 
+# libre office
+*.~lock*
+
 ignore/
+release/
+bin/
+obj/
 
 
