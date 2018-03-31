@@ -1,13 +1,10 @@
 /*
-    maybe separate .c file, everything in here
-    is a static function definition
+    Author: Jonathan Weinstein
 
-    C++'s function overloading and inline are missed.
-    To get the C++ inline behavior, I think extern inline protos
-    need to be in exactly 1 .c file.
-
-    Without that, I think they are like static, except when
-    comes to static variables
+    This file does not contain tailored
+    functions to this assignment, but general
+    purpose/generic routines. Examples: millisecond timer,
+    a millisecond sleep, and an RNG with local state.
 */
 #ifndef H_UTIL
 #define H_UTIL
@@ -43,26 +40,12 @@ void xcreate_pthread_defattr(pthread_t *pres, void* (*func)(void*), void* arg)
 }
 
 inline
-void* xmalloc(size_t nbytes)
-{
-    void *const res = malloc(nbytes);
-    if (!res)
-    {
-        perror("malloc()");
-        exit(EXIT_FAILURE);
-    }
-    return res;
-}
-
-inline
 void byte_copy(const void* from, const void* fend, void* to)
 {
     memcpy(to, from, (const char *)fend - (const char *)from);//byte distance
 }
 
-#define XMALLOC_UNITS(T, N) ((T *)xmalloc(N*sizeof(T)))
 #define QSORT_TYPED(B,E,F) do{ __typeof(E) _P = (B); qsort(_P, (E)-_P, sizeof(*_P), F); }while(0)
-#define UNUSED_ARG(A) (void)A
 
 /*
     A small and decent rng is provided here. rand() is not used, as its
@@ -105,8 +88,6 @@ uint32_t random32_xrange(random32_t *p, unsigned ibegin, unsigned iend)
     return ibegin + (random32(p) % (iend-ibegin));
 }
 
-unsigned xxxx();
-
 inline
 unsigned long get_millisecs_stamp(void)
 {
@@ -125,19 +106,19 @@ void millisleep(unsigned long msecs)
     if (msecs >= 1000u)
     {
         a[0].tv_sec = msecs/1000u;
-        a[0].tv_nsec = msecs*1000u;//only by 1000 because secs consumed
+        a[0].tv_nsec = msecs*1000u;//only by one 1000 because secs consumed
     }
     else
     {
         a[0].tv_sec = 0;
         a[0].tv_nsec = msecs*(1000u*1000u);
     }
-    #if 0
+    #if 0//untested
     unsigned i=0;
     while (nanosleep(&a[i], &a[i^1])!=0 && errno==EINTR)
         i^=1;
     #else
-    nanosleep(a+0, a+1);
+    nanosleep(a+0, a+1);//const request, remaining (due to thread signal/intr) not a concern for this assignment
     #endif
 }
 
